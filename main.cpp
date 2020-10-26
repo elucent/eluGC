@@ -1,28 +1,35 @@
 #include "gc.h"
-#include <vector>
 
-using namespace std;
-
-struct list {
-    int val[100];
-    object<list> next;
-    list(object<list> next_in): next(next_in) {}
+struct list_t {
+    int head;
+    object<list_t> tail;
+    list_t(int head_in, object<list_t> tail_in): 
+        head(head_in), tail(tail_in) {}
 };
 
-object<list> construct_list(int i) {
-    object<list> l;
-    while (i > 0) l = make<list>(l), i --;
-    return l;
+using list = object<list_t>;
+
+list cons(int h, list t) {
+    return make<list_t>(h, t);
 }
 
-struct large {
-    int data[1024];
-};
+list append(list a, list b) {
+    if (!a) return b;
+    if (!b) return a;
+    return cons(a->head, append(a->tail, b));
+}
+
+list map(list l, int(*func)(int)) {
+    if (!l) return l;
+    int head = func(l->head);
+    return cons(head, map(l->tail, func));
+}
 
 int main(int argc, char** argv) {
-    auto i = construct_list(100);
-    for (int j = 1; j <= 100000; j ++) i = construct_list(100);
-    while (i) printf("%d ", i->val), i = i->next;
+    list a = cons(1, cons(2, {}));
+    list b = cons(3, {});
+    list c = append(a, b);
+    map(c, [](int i) -> int { return printf("%d ", i), i; });
     printf("\n");
-    return i;
+    return 0;
 }
